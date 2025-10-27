@@ -168,25 +168,27 @@ class MsalAuth(internal val context: Context) {
      * Callback for getting the current account.
      */
     internal fun currentAccountCallback(result: MethodChannel.Result): CurrentAccountCallback {
+        // Fixes https://github.com/nayanAubie/msal_auth/issues/116
+        val oneShot = OneShotResult(result)
         return object : CurrentAccountCallback {
             override fun onAccountLoaded(activeAccount: IAccount?) {
                 if (activeAccount == null) {
-                    setNoCurrentAccountException(result)
+                    setNoCurrentAccountException(oneShot)
                     return
                 }
-                result.success(getCurrentAccountMap(activeAccount))
+                oneShot.success(getCurrentAccountMap(activeAccount))
             }
 
             override fun onAccountChanged(priorAccount: IAccount?, currentAccount: IAccount?) {
                 if (currentAccount == null) {
-                    setNoCurrentAccountException(result)
+                    setNoCurrentAccountException(oneShot)
                     return
                 }
-                result.success(getCurrentAccountMap(currentAccount))
+                oneShot.success(getCurrentAccountMap(currentAccount))
             }
 
             override fun onError(exception: MsalException) {
-                setMsalException(exception, result)
+                setMsalException(exception, oneShot)
             }
         }
     }
